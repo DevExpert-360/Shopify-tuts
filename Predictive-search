@@ -1,0 +1,70 @@
+//Html
+<form action="/search" method="get" role="search" class="header__search">
+  <input type="search" name="q" placeholder="Search products..." aria-label="Search" autocomplete="off" required>
+  <button type="submit">Search</button>
+  <div class="predictive-search"></div>
+</form>
+
+//JS
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.querySelector('.header__search input[type="search"]');
+  const predictiveSearchBox = document.querySelector('.predictive-search');
+
+  searchInput.addEventListener('input', function () {
+    const searchQuery = searchInput.value;
+
+    if (searchQuery.length > 2) {
+      fetch(`/search/suggest.json?q=${searchQuery}&resources[type]=product`)
+        .then(response => response.json())
+        .then(data => {
+          let searchResults = data.resources.results.products;
+          predictiveSearchBox.innerHTML = '';
+
+          if (searchResults.length > 0) {
+            searchResults.forEach(product => {
+              let productHtml = `
+                <div class="search-result-item">
+                  <a href="${product.url}">
+                    <img src="${product.featured_image.url}" alt="${product.title}">
+                    <span>${product.title}</span>
+                  </a>
+                </div>
+              `;
+              predictiveSearchBox.innerHTML += productHtml;
+            });
+            predictiveSearchBox.style.display = 'block';
+          } else {
+            predictiveSearchBox.style.display = 'none';
+          }
+        });
+    } else {
+      predictiveSearchBox.style.display = 'none';
+    }
+  });
+});
+
+//css
+.predictive-search {
+  position: absolute;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  z-index: 1000;
+  display: none;
+}
+
+.predictive-search .search-result-item {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.predictive-search .search-result-item img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+
+.predictive-search .search-result-item span {
+  font-size: 14px;
+}
